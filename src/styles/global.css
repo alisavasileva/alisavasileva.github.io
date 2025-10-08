@@ -1,0 +1,36 @@
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: true;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  interpolate-size: allow-keywords;
+}
+
+body {
+  font-size: 20px;
+  color: #0f1f29;
+  text-underline-offset: 0.25em;
+}
+
+strong {
+  font-weight: 600;
+}
+
+a.link {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+
+  &:hover {
+    color: var(--colors-blue);
+  }
+}
