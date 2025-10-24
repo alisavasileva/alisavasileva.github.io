@@ -4,7 +4,7 @@ import { Component, createSignal } from 'solid-js'
 import { RouteSectionProps, useLocation } from '@solidjs/router'
 import { Tab } from '@/models'
 
-export const Main: Component<RouteSectionProps> = props => {
+export const MainLayout: Component<RouteSectionProps> = props => {
   const location = useLocation()
   const tabs = [
     { id: '', path: '/', name: 'Cases' },

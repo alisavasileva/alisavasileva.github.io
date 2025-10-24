@@ -2,7 +2,7 @@ import { type Component } from 'solid-js'
 import '@style/styles.css'
 import '@/styles/global.css'
 import { Router } from '@solidjs/router'
-import { Main } from '@/components/Main'
+import { RootLayout } from '@/components/layout/RootLayout'
 import { routes } from '@/routes'
 import { css } from '@style/css'
 
@@ -19,7 +19,7 @@ const App: Component = () => {
           and check back soon!
         </div>
       </div>
-      <Router root={Main}>{routes}</Router>
+      <Router root={(RootLayout)}>{routes}</Router>
     </>
   )
 }

@@ -13,4 +13,10 @@
 html {
   box-sizing: border-box;
   scroll-behavior: smooth;
+  interpolate-size: allow-keywords;
+}
+
+body {
+  font-size: 20px;
+  color: #0F1F29;
 }

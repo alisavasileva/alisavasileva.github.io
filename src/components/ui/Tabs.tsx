@@ -72,13 +72,6 @@ const styles = {
         animation: 'rotate 3s linear infinite',
         animationPlayState: 'running',
       },
-
-      // _hover: {
-      //   animationPlayState: 'running',
-      // },
-      // _focusVisible: {
-      //   animationPlayState: 'running',
-      // },
     },
     variants: {
       active: {

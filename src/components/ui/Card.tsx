@@ -4,7 +4,7 @@ import { cva, cx } from '@style/css'
 interface CardProps {
   children: JSX.Element
   class?: string
-  theme: 'mist' | undefined
+  theme?: 'mist' | undefined
 }
 
 export const Card: Component<CardProps> = props => {
@@ -14,9 +14,11 @@ export const Card: Component<CardProps> = props => {
 const styles = {
   card: cva({
     base: {
-      background: 'white',
+      position: 'relative',
       borderRadius: '12px',
-      boxShadow: '0 12px 16px -2px #00274A0F, 0 4px 16px 0 #00274A14',
+      background: '#F8FAFC',
+      border: '1px solid #E4E6EE',
+      padding: 'spacing-24',
     },
     variants: {
       theme: {

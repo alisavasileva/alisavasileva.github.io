@@ -1,24 +1,24 @@
 import { Project } from '@/models'
 import { DashboardCasePage } from '@/pages/case/Dashboard'
 import { MonitoringCasePage } from '@/pages/case/Monitoring'
-import { SmartImportCasePage } from '@/pages/case/SmartImport'
+import { CRMDataImportCasePage } from '@/pages/case/CRMDataImportCasePage'
 
 export const projects: Project[] = [
   {
-    id: 'smart-import',
-    name: 'Smart Import',
+    id: 'crm-data-import',
+    name: 'CRM Data Import',
     company: 'efficy',
     product: 'Maxo',
     tags: ['Product design', 'UX/UI', 'Enterprise', 'Efficy'],
-    thumbnail: '/projects/smart-import.png',
-    component: SmartImportCasePage,
+    thumbnail: '/cases/crm-data-import.png',
+    component: CRMDataImportCasePage,
   },
   {
     id: 'monitoring',
     name: 'Monitoring',
     company: 'tis',
     tags: [],
-    thumbnail: '/projects/monitoring.png',
+    thumbnail: '/cases/monitoring.png',
     component: MonitoringCasePage,
   },
   {
@@ -26,7 +26,7 @@ export const projects: Project[] = [
     name: 'Dashboard',
     company: 'dit',
     tags: [],
-    thumbnail: '/projects/dashboard.png',
+    thumbnail: '/cases/dashboard.png',
     component: DashboardCasePage,
   },
 ]

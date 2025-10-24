@@ -4,20 +4,29 @@ import { CasesPage } from '@/pages/Cases'
 import { ProductsPage } from '@/pages/Products'
 import { ExperiencePage } from '@/pages/Experience'
 import { LifePage } from '@/pages/Life'
+import { MainLayout } from './components/layout/MainLayout'
+import { CasesLayout } from './components/layout/CasesLayout'
 
-const projectRoutes: RouteDefinition[] = projects.map(project => ({
-  path: `/case/${project.id}`,
+const caseRoutes: RouteDefinition[] = projects.map(project => ({
+  path: `/${project.id}`,
   component: () => <project.component project={project} />,
 }))
 
 export const routes: RouteDefinition[] = [
   {
-    path: '/',
-    component: CasesPage,
-    children: [{ path: '/', component: () => null }, ...projectRoutes],
+    path: '/case/',
+    component: CasesLayout,
+    children: [...caseRoutes],
   },
-  { path: '/products', component: ProductsPage },
-  { path: '/experience', component: ExperiencePage },
-  { path: '/life', component: LifePage },
-  { path: '*', component: () => '404 Not Found' },
+  {
+    path: '/',
+    component: MainLayout,
+    children: [
+      { path: '/', component: CasesPage },
+      { path: '/products', component: ProductsPage },
+      { path: '/experience', component: ExperiencePage },
+      { path: '/life', component: LifePage },
+      { path: '*', component: () => '404 Not Found' },
+    ],
+  }
 ]
