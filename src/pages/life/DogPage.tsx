@@ -2,19 +2,29 @@ import { Component, createSignal, For, onCleanup, onMount } from 'solid-js'
 import { RouteSectionProps, useNavigate } from '@solidjs/router'
 import { css, cva } from '@style/css'
 import { PageNavigation } from '@/components/ui/PageNavigation'
-import { Sprite, SpriteProps } from './Sprite'
+import { Sprite, SpriteController, SpriteProps } from './Sprite'
 import { isOverlappingRects, isTouchDevice, playSound } from '@/utils'
 import { Icon } from '@/components/ui/Icon'
 
+const mobileSpeedModifier = 3
+const frames = ['/dog/link1.png', '/dog/link2.png']
+const flyingFrames = ['/dog/link-fly1.png', '/dog/link-fly2.png']
+const poopFrames = ['/dog/poop.png']
+const allFrames = [...frames, ...flyingFrames, ...poopFrames]
+const linkWidth = 100
+const linkHeight = 71
+
 export const DogPage: Component<RouteSectionProps> = () => {
-  const navigate = useNavigate()
   let headerRef = undefined as HTMLElement | undefined
   let musicRef = undefined as HTMLAudioElement | undefined
   let dogRef = undefined as HTMLDivElement | undefined
   let foodRef = undefined as HTMLDivElement | undefined
   let mainRef = undefined as HTMLElement | undefined
   let footerRef = undefined as HTMLElement | undefined
+  let dogController = undefined as SpriteController | undefined
+  let gameInterval: ReturnType<typeof setInterval>
 
+  const navigate = useNavigate()
   const [score, setScore] = createSignal(0)
   const [hasCape, setHasCape] = createSignal(false)
   const [volume, _setVolume] = createSignal(0)
@@ -31,32 +41,27 @@ export const DogPage: Component<RouteSectionProps> = () => {
       musicRef.volume = volume
     }
   }
-
   const speed = () => (hasCape() ? 20 : 8)
 
-  const mobileSpeedModifier = 3
-  const frames = ['/dog/link1.png', '/dog/link2.png']
-  const flyingFrames = ['/dog/link-fly1.png', '/dog/link-fly2.png']
-  const poopFrames = ['/dog/poop.png']
-  const allFrames = [...frames, ...flyingFrames, ...poopFrames]
-  allFrames.map(src => {
-    const img = new Image()
-    img.src = src
+  Promise.all(allFrames.map(frame => 
+    new Promise<HTMLImageElement>(resolve => {
+      const img = new Image()
+      img.src = frame
+      img.onload = () => resolve(img)
+    }),
+  )).then(() => {
+    init()
   })
 
-  const linkWidth = 100
-  const linkHeight = 71
-
   const createBounds = () => {
-    console.log({
-      mainHeight: mainRef?.clientHeight,
-      footerHeight: footerRef?.clientHeight,
-    })
     return {
       minX: -linkWidth,
-      maxX: window.innerWidth,
-      minY: 0,
-      maxY: (mainRef?.clientHeight ?? window.innerHeight) - (footerRef?.clientHeight ?? 250) - linkHeight,
+      maxX: window.innerWidth - 20,
+      minY: -20,
+      maxY:
+        (mainRef?.clientHeight ?? window.innerHeight) -
+        (footerRef?.clientHeight ?? 250) -
+        linkHeight,
     }
   }
 
@@ -98,13 +103,85 @@ export const DogPage: Component<RouteSectionProps> = () => {
     setBounds(createBounds())
   }
 
+  const footerResizeObserver = new ResizeObserver(() =>
+    setBounds(createBounds()),
+  )
+
+  const init = () => {
+    gameInterval = setInterval(() => {
+      // Move link based on input
+      if (left()) move(-1, 0)
+      if (right()) move(1, 0)
+      if (up()) move(0, -1)
+      if (down()) move(0, 1)
+      if (!left() && !right() && !up() && !down())
+        setLink({ ...link(), state: 'pause' })
+
+      if (!left() && !right() && hasCape()) {
+        const direction = link().xScale ?? 1
+        if (direction > 0) move(-1, 0)
+        if (direction < 0) move(1, 0)
+      }
+
+      // Keep link within bounds
+      if (link().x < bounds().minX) setLink({ ...link(), x: bounds().maxX - speed() })
+      if (link().x > bounds().maxX) setLink({ ...link(), x: bounds().minX + speed() })
+      if (link().y < bounds().minY) setLink({ ...link(), y: bounds().minY - speed() })
+      if (link().y > bounds().maxY) setLink({ ...link(), y: bounds().maxY + speed() })
+
+      // Add trail
+      if (hasCape()) {
+        if (Math.random() < 0.01) createPoop()
+      }
+
+      // Check for collision with food
+      const dogRect = dogRef?.getBoundingClientRect()
+      const adjustedDogRect = dogRect
+        ? new DOMRect(
+            dogRect.x,
+            dogRect.y + 50,
+            dogRect.width,
+            dogRect.height - 50,
+          )
+        : undefined
+      if (
+        isOverlappingRects(adjustedDogRect, foodRef?.getBoundingClientRect())
+      ) {
+        setScore(score() + 1)
+        setHasCape(true)
+        setLink({ ...link(), frames: flyingFrames })
+        clearTimeout(capeTimeout)
+        capeTimeout = setTimeout(() => {
+          setHasCape(false)
+          setLink({ ...link(), frames })
+        }, 1000)
+        if (volume() > 0) playSound('/dog/bark.mp3', volume())
+
+        let newX = 0
+        let newY = 0
+        let distance = 0
+        let tries = 0
+        do {
+          newX = 50 + Math.random() * (bounds().maxX - 100)
+          newY = 50 + Math.random() * (bounds().maxY - 100)
+          distance = Math.hypot(newX - link().x, newY - link().y)
+          tries++
+        } while (distance < 100 && tries < 10)
+
+        setFood({ ...food(), x: newX, y: newY })
+      }
+    }, 25)
+  }
+
   onMount(() => {
     setBounds(createBounds())
+    footerResizeObserver.observe(footerRef!)
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
     window.addEventListener('resize', handleResize)
   })
   onCleanup(() => {
+    footerResizeObserver.disconnect()
     window.removeEventListener('keydown', handleKeyDown)
     window.removeEventListener('keyup', handleKeyUp)
     window.removeEventListener('resize', handleResize)
@@ -125,73 +202,17 @@ export const DogPage: Component<RouteSectionProps> = () => {
       xScale: dx < 0 ? 1 : dx > 0 ? -1 : link().xScale,
     })
   }
-
-  const gameInterval = setInterval(() => {
-    // Move link based on input
-    if (left()) move(-1, 0)
-    if (right()) move(1, 0)
-    if (up()) move(0, -1)
-    if (down()) move(0, 1)
-    if (!left() && !right() && !up() && !down())
-      setLink({ ...link(), state: 'pause' })
-
-    if (!left() && !right() && hasCape()) {
-      const direction = link().xScale ?? 1
-      if (direction > 0) move(-1, 0)
-      if (direction < 0) move(1, 0)
-    }
-
-    // Keep link within bounds
-    if (link().x < bounds().minX) setLink({ ...link(), x: bounds().maxX })
-    if (link().x > bounds().maxX) setLink({ ...link(), x: bounds().minX })
-    if (link().y < bounds().minY) setLink({ ...link(), y: bounds().minY })
-    if (link().y > bounds().maxY) setLink({ ...link(), y: bounds().maxY })
-
-    // Add trail
-    if (hasCape()) {
-      if (Math.random() < 0.01) createPoop()
-    }
-
-    // Check for collision with food
-    const dogRect = dogRef?.getBoundingClientRect()
-    const adjustedDogRect = dogRect
-      ? new DOMRect(
-          dogRect.x,
-          dogRect.y + 50,
-          dogRect.width,
-          dogRect.height - 50,
-        )
-      : undefined
-    if (isOverlappingRects(adjustedDogRect, foodRef?.getBoundingClientRect())) {
-      setScore(score() + 1)
-      setHasCape(true)
-      setLink({ ...link(), frames: flyingFrames })
-      clearTimeout(capeTimeout)
-      capeTimeout = setTimeout(() => {
-        setHasCape(false)
-        setLink({ ...link(), frames })
-      }, 1000)
-      if (volume() > 0) playSound('/dog/bark.mp3', volume())
-
-      let newX = 0
-      let newY = 0
-      let distance = 0
-      do {
-        newX = 100 + Math.random() * (bounds().maxX - 200)
-        newY = 100 + Math.random() * (bounds().maxY - 300)
-        distance = Math.hypot(newX - link().x, newY - link().y)
-      } while (distance < 100)
-
-      setFood({ ...food(), x: newX, y: newY })
-    }
-  }, 25)
+  const mobileMove = (dx: number, dy: number) => {
+    move(dx, dy)
+    dogController?.nextFrame()
+  }
 
   const createPoop = () => {
     setTotalPoops(totalPoops() + 1)
     setPoops(
       [
         ...poops(),
-        { x: link().x, y: link().y, scale: Math.random() * 1 + 0.5 },
+        { x: link().x, y: link().y + 30, scale: Math.random() * 0.75 + 0.5 },
       ].sort((a, b) => a.y - b.y),
     )
   }
@@ -213,7 +234,7 @@ License: CC BY`)
           nextText="Posters"
           ref={headerRef}
           width="full"
-          title="LINK (my dog)"
+          title="DOG GAME"
         />
       </div>
       <main class={styles.level} ref={mainRef}>
@@ -244,6 +265,9 @@ License: CC BY`)
         <Sprite
           {...link()}
           ref={dogRef}
+          controller={controller => {
+            dogController = controller
+          }}
           class={styles.link({ hasCape: hasCape() })}
         />
       </main>
@@ -274,11 +298,12 @@ License: CC BY`)
         {!isTouchDevice() ? (
           <>
             <img src="/dog/arrows.png" />
-            <div>
-              Link is my dog. He is very good dog.
+            <div class={styles.rules}>
+              Link is my dog.
               <br />
-              Use the arrow keys to help him get food
+              He is very good dog.
               <br />
+              Help him get food and clean up after him!
             </div>
           </>
         ) : (
@@ -286,27 +311,27 @@ License: CC BY`)
             <div class={styles.mobileButtons}>
               <img
                 src="/dog/up.png"
-                onClick={() => move(0, -mobileSpeedModifier)}
+                onClick={() => mobileMove(0, -mobileSpeedModifier)}
               />
             </div>
             <div class={styles.mobileButtons}>
               <img
                 src="/dog/left.png"
-                onClick={() => move(-mobileSpeedModifier, 0)}
+                onClick={() => mobileMove(-mobileSpeedModifier, 0)}
               />
               <img
                 src="/dog/down.png"
-                onClick={() => move(0, mobileSpeedModifier)}
+                onClick={() => mobileMove(0, mobileSpeedModifier)}
               />
               <img
                 src="/dog/right.png"
-                onClick={() => move(mobileSpeedModifier, 0)}
+                onClick={() => mobileMove(mobileSpeedModifier, 0)}
               />
             </div>
-            <div>
+            <div class={styles.rules}>
               Link is my dog. He is very good dog.
               <br />
-              Use the arrows to help him get food
+              Help him get food and clean up after him!
             </div>
           </>
         )}
@@ -326,6 +351,7 @@ const styles = {
     flexDirection: 'column',
     height: '100dvh',
     widows: '100dw',
+    overflowX: 'hidden',
   }),
   level: css({
     background: 'url(/dog/grass.png) repeat',
@@ -333,7 +359,7 @@ const styles = {
     borderTop: '1px solid black',
     position: 'relative',
     flex: 1,
-    overflow: 'hidden',
+    overflow: 'visible',
     touchAction: 'manipulation',
   }),
   header: css({
@@ -348,18 +374,24 @@ const styles = {
     base: {
       position: 'fixed',
       display: 'flex',
-      gap: 'spacing-32',
       bottom: 0,
       left: 0,
       right: 0,
       fontFamily: '"Jersey 10", sans-serif',
-      p: 'spacing-32',
+      p: 'spacing-16',
       textAlign: 'center',
       borderTop: '1px solid black',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'white',
       touchAction: 'manipulation',
+
+      flexDirection: 'column',
+      gap: 'spacing-8',
+      md: {
+        flexDirection: 'row',
+        gap: 'spacing-32',
+      },
 
       '& img': {
         height: '64px',
@@ -387,16 +419,21 @@ const styles = {
     top: 'spacing-16',
     cursor: 'pointer',
   }),
+  rules: css({
+    lineHeight: '80%',
+  }),
   score: css({
-    fontSize: '28px',
+    fontSize: '24px',
     lineHeight: '18px',
     display: 'flex',
     gap: 'spacing-8',
     flexWrap: 'nowrap',
+    flexDirection: 'row',
 
-    sm: {
-      display: 'block',
-    }
+    md: {
+      gap: '0',
+      flexDirection: 'column',
+    },
   }),
   mobileButtons: css({
     display: 'flex',

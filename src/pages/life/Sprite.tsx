@@ -1,8 +1,13 @@
-import { Component, createSignal, onCleanup } from 'solid-js'
+import { Component, createSignal, onCleanup, onMount } from 'solid-js'
 import { css, cx } from '@style/css'
+
+export interface SpriteController {
+  nextFrame: () => void
+}
 
 export interface SpriteProps {
   ref?: HTMLDivElement | undefined
+  controller?: (controller: SpriteController) => void
   frames: string[]
   x: number
   y: number
@@ -23,6 +28,16 @@ export const Sprite: Component<SpriteProps> = props => {
   })
   const [currentFrame, setCurrentFrame] = createSignal(0)
 
+  const nextFrame = () => {
+    setCurrentFrame(prev => (prev + 1) % props.frames.length)
+  }
+
+  onMount(() => {
+    props.controller?.({
+      nextFrame,
+    })
+  })
+
   // Preload frames
   Promise.all(
     props.frames.map(
@@ -40,7 +55,7 @@ export const Sprite: Component<SpriteProps> = props => {
 
   const enterFrameInterval = setInterval(() => {
     if (props.state === 'play' && props.frames.length) {
-      setCurrentFrame(prev => (prev + 1) % props.frames.length)
+      nextFrame()
     }
   }, props.frameInterval ?? 100)
 

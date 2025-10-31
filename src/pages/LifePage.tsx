@@ -1,4 +1,5 @@
 import { Section } from '@/components/ui/Section'
+import { AlisaThumbnailBase64 } from '@/data/base64images'
 import { A, useNavigate } from '@solidjs/router'
 import { css, cx } from '@style/css'
 import { Component, createSignal, onCleanup, onMount } from 'solid-js'
@@ -56,6 +57,9 @@ export const LifePage: Component = () => {
         class={styles.picture}
         src="/alisa.jpg"
         alt="Me sitting on some steps"
+        style={{
+          'background-image': `url(data:image/jpg;base64,${AlisaThumbnailBase64})`
+        }}
       />
     </Section>
   )
@@ -84,13 +88,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     p: 'spacing-8',
-    zIndex: '2',
+    zIndex: '0',
 
     top: 'calc(-1 * var(--mt) + var(--spacing-spacing-16))',
     width: '50%',
     height: 'auto',
 
     md: {
+      zIndex: '2',
       top: '0',
       width: 'var(--offset)',
       height: 'var(--text-start)',
@@ -144,6 +149,8 @@ const styles = {
     left: 'calc(50% - var(--image-width) / 2)',
     height: 'var(--image-height)',
     width: 'var(--image-width)',
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
   }),
   dog: css({
     height: '100px',
