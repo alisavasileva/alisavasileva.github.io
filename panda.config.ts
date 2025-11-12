@@ -24,6 +24,7 @@ export default defineConfig({
         blue: { value: '#007AFF' },
         magenta: { value: '#E666FF' },
         red: { value: '#E81B1B' },
+        error: { value: '#FF3B30' },
         grey: {
           100: { value: '#FAFAFA' },
           500: { value: '#F2F2F7' },

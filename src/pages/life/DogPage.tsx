@@ -230,7 +230,7 @@ License: CC BY`)
         <PageNavigation
           back={() => navigate('/life')}
           next={() => navigate('/posters')}
-          backText="Life"
+          backText="Back"
           nextText="Posters"
           ref={headerRef}
           width="full"

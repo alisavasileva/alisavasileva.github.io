@@ -120,7 +120,7 @@ export const PhotographyPage: Component<RouteSectionProps> = () => {
         <PageNavigation
           back={() => navigate('/life')}
           next={() => navigate('/dog')}
-          backText="Life"
+          backText="Back"
           nextText="Dog"
           ref={headerRef}
           width="full"

@@ -8,6 +8,7 @@ interface CardProps {
   clickable?: boolean
   noPadding?: boolean
   onClick?: () => void
+  type?: 'default' | 'error'
 }
 
 export const Card: Component<CardProps> = props => {
@@ -18,6 +19,7 @@ export const Card: Component<CardProps> = props => {
           selected: !!props.selected,
           clickable: !!props.clickable,
           noPadding: !!props.noPadding,
+          type: props.type ?? 'default',
         }),
         props.class,
       )}
@@ -56,6 +58,13 @@ const styles = {
         true: {
           p: '0',
         },
+      },
+      type: {
+        error: {
+          borderColor: 'error',
+          background: '#FFE9E8',
+        },
+        default: {},
       },
     },
   }),

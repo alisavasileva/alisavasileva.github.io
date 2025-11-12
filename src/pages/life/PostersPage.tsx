@@ -42,7 +42,7 @@ export const PostersPage: Component<RouteSectionProps> = () => {
         <PageNavigation
           back={() => navigate('/life')}
           next={() => navigate('/photography')}
-          backText="Life"
+          backText="Back"
           nextText="Photography"
           ref={headerRef}
           width="full"
@@ -76,7 +76,7 @@ export const PostersPage: Component<RouteSectionProps> = () => {
                           headerRef={undefined}
                         />
                       )}
-                      <img src={`/posters/${poster}`} />
+                      <img src={`/posters/${poster}`} class={styles.poster} />
                     </div>
                   )}
                 </For>
@@ -122,6 +122,9 @@ const styles = {
     sm: { gridTemplateColumns: 'repeat(2, 1fr)' },
     md: { gridTemplateColumns: 'repeat(3, 1fr)' },
     lg: { gridTemplateColumns: 'repeat(4, 1fr)' },
+  }),
+  poster: css({
+    width: '100%',
   }),
   tab: cva({
     base: {

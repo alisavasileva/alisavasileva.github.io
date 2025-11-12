@@ -12,11 +12,13 @@ import { ScrollTarget } from '@/components/ui/ScrollTarget'
 import { Table } from '@/components/ui/Table'
 import { ProjectComponentProps } from '@/models'
 import { css } from '@style/css'
-import { Component } from 'solid-js'
+import { Component, createSignal } from 'solid-js'
 
 export const CRMDataImportCasePage: Component<
   ProjectComponentProps
 > = props => {
+  const [showWhatWeMissed, setShowWhatWeMissed] = createSignal(false)
+
   return (
     <>
       <ScrollTarget id="overview" headerRef={props.headerRef} />
@@ -53,11 +55,29 @@ export const CRMDataImportCasePage: Component<
       />
       <div>
         <ScrollTarget id="plan" headerRef={props.headerRef} />
-        <h3 class={styles.sectionTitle}>Our plan</h3>
+        <h3 class={styles.sectionTitleSplit}>
+          <div>Our plan</div>
+          <div>
+            <div
+              class={styles.sectionTitleSplitButton}
+              onMouseOver={() => setShowWhatWeMissed(true)}
+              onMouseOut={() => setShowWhatWeMissed(false)}
+            >⚠️ What we missed?</div>
+          </div>
+        </h3>
+        <div class={styles.whatWeMissedContainer}>
+          {showWhatWeMissed() && <div class={styles.whatWeMissed}>
+            Looking back, we realised that the intermediate step with pipeline templates slowed us down.<br />
+            It felt logical at first — we tried to help users understand how the pipeline worked instead of redesigning it. But users never wanted to learn the system; they just wanted to import their data quickly and safely.<br /><br />
+            That insight led us to the next phase — Easy Mode with visual mapping and a short wizard — which finally matched what users actually needed.
+          </div>}
+        </div>
+
         <Columns number={2} breakpoint="lg">
           <PlanCard
             preheader="1 cycle:"
             title="Reduce support load during migrations."
+            type={showWhatWeMissed() ? 'error' : 'default'}
           >
             <p>
               Guide users through setup with dropdowns, inline validation, and
@@ -338,5 +358,40 @@ const styles = {
   sectionTitle: css({
     textStyle: 'sectionTitle',
     mb: 'spacing-16',
+  }),
+  sectionTitleSplit: css({
+    textStyle: 'sectionTitle',
+    mb: 'spacing-16',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  }),
+  sectionTitleSplitButton: css({
+    textStyle: 'base',
+    lineHeight: '100%',
+    border: '1px solid #E4E6EE',
+    borderRadius: '8px',
+    p: '4px 8px',
+    cursor: 'pointer',
+
+    _hover: {
+      backgroundColor: '#F9FAFC',
+    },
+  }),
+  whatWeMissedContainer: css({
+    position: 'relative',
+  }),
+  whatWeMissed: css({
+    position: 'absolute',
+    zIndex: 1,
+    right: 0,
+    top: '-10px',
+    width: '432px',
+    maxWidth: '100%',
+    borderRadius: '8px',
+    p: '10px 16px',
+    color: 'secondary',
+    boxShadow: '0px 2.81px 8.43px 0px #0000001A, 0px 0px 2.81px 0px #00000014',
+    background: 'white',
   }),
 }
